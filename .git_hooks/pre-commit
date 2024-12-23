@@ -1,0 +1,21 @@
+# exit when any command fails
+set -e
+
+NEWR=$(mktemp -d -t hook-XXXXXXXXXX)
+OUTPUT_BASE=$(mktemp -d -t hook-base-XXXXXXXXXX)
+
+BAZEL="bazel --output_base=$OUTPUT_BASE --nosystem_rc"
+TESTS=//:ci
+
+# Create a "clean" client.
+git checkout-index --prefix=${NEWR}/ -a
+cd $NEWR
+
+echo common --noincompatible_sandbox_hermetic_tmp  >> .bazelrc  # See https://github.com/bazelbuild/bazel/issues/20515
+if time $BAZEL test --config=ci $TESTS -k;
+then
+  $BAZEL clean --expunge
+else
+  echo file://$NEWR
+  exit 1
+fi
