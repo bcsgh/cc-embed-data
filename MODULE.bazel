@@ -27,7 +27,6 @@ bazel_dep(
 
 bazel_dep(
     name = "jsoncpp",
-    repo_name = "com_github_open_source_parsers_jsoncpp",
     version = "1.9.6",
 )
 
