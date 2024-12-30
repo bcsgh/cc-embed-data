@@ -306,8 +306,8 @@ cc_embed_data = rule(
         "_cc_deps": attr.label_list(
             providers = [CcInfo],
             default = [
-                "@com_google_absl//absl/strings",
-                "@com_google_absl//absl/types:span",
+                "@abseil-cpp//absl/strings",
+                "@abseil-cpp//absl/types:span",
             ],
         ),
     },

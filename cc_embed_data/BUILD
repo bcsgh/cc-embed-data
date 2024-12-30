@@ -34,9 +34,9 @@ cc_binary(
     srcs = ["make_emebed_data.cc"],
     visibility = ["//visibility:public"],
     deps = [
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/flags:flag",
+        "@abseil-cpp//absl/flags:parse",
+        "@abseil-cpp//absl/strings",
         "@jsoncpp//:jsoncpp",
     ],
 )

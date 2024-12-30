@@ -78,7 +78,7 @@ def cc_embed_data_suite(name):
         data = SRCS,
         deps = [
             ":cc_embed_data_example",
-            "@com_google_googletest//:gtest_main",
+            "@googletest//:gtest_main",
         ],
     )
 
@@ -132,7 +132,7 @@ def cc_embed_data_suite(name):
         data = SHORT_SRC,
         deps = [
             ":cc_embed_data_short",
-            "@com_google_googletest//:gtest_main",
+            "@googletest//:gtest_main",
         ],
     )
 
@@ -155,7 +155,7 @@ def cc_embed_data_suite(name):
         srcs = ["cc_embed_data_deps_test.cc"],
         deps = [
             ":cc_embed_data_deps",
-            "@com_google_googletest//:gtest_main",
+            "@googletest//:gtest_main",
         ],
     )
 
