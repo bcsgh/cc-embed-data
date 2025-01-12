@@ -25,6 +25,8 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+exports_files(["cc_embed_data.bzl"])
+
 load("@com_github_bcsgh_build_test//build_test:build.bzl", "build_test")
 
 test_suite(name = "ci")

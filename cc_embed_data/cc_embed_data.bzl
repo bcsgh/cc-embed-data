@@ -31,11 +31,74 @@
 # https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html
 
 """
-A Bazel/skylark rule for embedding files from the build environment into the
-data section of a binary and making them accessible as a library.
+# A Bazel/skylark rule for embedding source files as a `cc_library` rule.
 
-This allows placing large test or binary artifacts to come from faw files (or
-other build artifacts) rather than deal with escaping them into string literals.
+This take a files from the build environment a puts it directly into the
+data section of a binary, making them accessible as a library.
+
+This allows large test or binary artifacts to come from files (or other build
+artifacts) rather than deal with escaping them into string literals.
+
+## `MODULE.bazel`
+
+```
+bazel_dep(
+    name = "com_github_bcsgh_cc_embed_data",
+    version = ...,
+)
+```
+
+## Example usage:
+
+### `src/BUILD`
+```
+load("//cc_embed_data:cc_embed_data.bzl", "cc_embed_data")
+
+cc_embed_data(
+    name = "cc_embed_example",
+    srcs = [
+      "foo.bin",
+      #...
+    ],
+    namespace = "my_namespace",
+)
+
+
+cc_test(
+    name = "cc_embed_example_usage",
+    srcs = ["cc_embed_example_usage.cc"],
+    data = SRCS,
+    deps = [
+        ":cc_embed_example",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+```
+
+### `src/cc_embed_example_usage.cc`
+
+```
+#include <string_view>
+
+#include "cc_embed_example_data.h"
+
+void Use(std::string_view);
+void Use(std::string_view, std::string_view);
+
+int main() {
+  // find one
+  Use(my_namespace::src_foo_bin());
+
+  // find all
+  for (const auto& i : my_namespace::EmbedIndex()) {
+    Use(i.first, i.second);
+  }
+
+  return 0;
+}
+
+```
 """
 
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain", "use_cpp_toolchain")
