@@ -159,6 +159,26 @@ def cc_embed_data_suite(name):
         ],
     )
 
+    cc_embed_data(
+        name = "cc_embed_data_names",
+        srcs = ["//tests/testdata2:nametest_group"],
+        namespace = "test_ns",
+        cc = "cc_embed_data_names.cc",
+        h = "cc_embed_data_names.h",
+        a = "cc_embed_data_names.a",
+    )
+
+    native.cc_binary(
+        name = "names_main",
+        srcs = ["names_main.cc"],
+        deps = [":cc_embed_data_names"],
+    )
+
+    build_test(
+        name = "cc_embed_data_names_build_test",
+        targets = [":names_main", ":cc_embed_data_names"],
+    )
+
     # Suit
     native.test_suite(
         name = name,
@@ -170,6 +190,7 @@ def cc_embed_data_suite(name):
             ":cc_embed_data_contents_test",
             ":cc_embed_data_deps_build_test",
             ":cc_embed_data_deps_live_test",
+            ":cc_embed_data_names_build_test",
         ] + [
             ":diff_%s_test" % e
             for e in EXT

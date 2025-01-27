@@ -27,9 +27,11 @@
 
 #include <fstream>
 #include <iostream>
+#include <set>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_replace.h"
 #include "absl/strings/strip.h"
@@ -107,17 +109,28 @@ std::optional<std::vector<Item>> Load() {
     }
     std::string src = i["src"].asString();
 
-    // Things needed to turn a path into a symbol name.
-    static const std::vector<std::pair<absl::string_view, absl::string_view>> rep = {
-        {"/", "_"}, {".", "_"}, {"-", "_"}, {"+", "_"}  //
-    };
+    static const auto allowed = [] {
+      std::set<char> allowed;
+      //A-Z, a-z, 0-9, or any of ' !"#$%&'()*+,-./;<=>?[]^_`{|}~'
+
+      for (char c = 'a'; c <= 'z'; c++) allowed.emplace(c);
+      for (char c = 'A'; c <= 'Z'; c++) allowed.emplace(c);
+      for (char c = '0'; c <= '9'; c++) allowed.emplace(c);
+      //for (char c : "") allowed.emplace(c);
+      return allowed;
+    }();
+
+    auto name2 = name;
+    for (char &c : name2) if (allowed.count(c) == 0) c = '_';
+    auto path2 = path;
+    for (char &c : path2) if (allowed.count(c) == 0) c = '_';
 
     items.emplace_back(Item{
         name,
         path,
         src,
-        absl::StrReplaceAll(name, rep),
-        absl::StrCat("_binary_", absl::StrReplaceAll(path, rep), "_"),
+        name2,
+        absl::StrCat("_binary_", path2, "_"),
     });
 
   }
@@ -207,7 +220,7 @@ int main(int argc, char** argv) {
 )";
 
     for (const auto& item : items) {
-      cc << "    {\"" << item.file_name << "\", " << item.var_name << "()},\n";
+      cc << "    {\"" << absl::CEscape(item.file_name) << "\", " << item.var_name << "()},\n";
     }
     cc << "  };\n"
        << "  return EmbeddedIndex{kRet, " << items.size() << "};\n"
@@ -217,7 +230,7 @@ int main(int argc, char** argv) {
   static std::pair<absl::string_view, absl::string_view> kRet[] = {
 )";
     for (const auto& item : items) {
-      cc << "    {\"" << item.file_name << "\", \"" << item.file_src << "\"},\n";
+      cc << "    {\"" << absl::CEscape(item.file_name) << "\", \"" << absl::CEscape(item.file_src) << "\"},\n";
     }
     cc << "  };\n"
        << "  return EmbeddedIndex{kRet, " << items.size() << "};\n"
