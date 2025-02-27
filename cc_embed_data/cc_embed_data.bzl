@@ -125,19 +125,23 @@ def _Fallback(out, alt):
         return alt
 
 def _cc_embed_data_impl(ctx):
-    if not ctx.attr.srcs and not ctx.attr.deps: fail("One of srcs or deps must be non-empty")
-    if ctx.attr.srcs and ctx.attr.deps: fail("Only one of srcs or deps may be non-empty")
+    if not ctx.attr.srcs and not ctx.attr.deps:
+        fail("One of srcs or deps must be non-empty")
+    if ctx.attr.srcs and ctx.attr.deps:
+        fail("Only one of srcs or deps may be non-empty")
 
     cc_toolchain = find_cpp_toolchain(ctx)
 
     # Construct a manifest to generate from.
     # This allows passing structured data from the ctx to the generator.
     def Munge(s):
-        name = s.path;
+        name = s.path
         r = s.owner.workspace_root + "/"
-        if name[:len(r)] == r: name = name[len(r):]
+        if name[:len(r)] == r:
+            name = name[len(r):]
         r = s.root.path + "/"
-        if name[:len(r)] == r: name = name[len(r):]
+        if name[:len(r)] == r:
+            name = name[len(r):]
 
         return struct(
             name = name,
@@ -147,7 +151,8 @@ def _cc_embed_data_impl(ctx):
         )
 
     def GetPath(target, path):
-        for b in path.split("."): target = getattr(target, b)
+        for b in path.split("."):
+            target = getattr(target, b)
         return target
 
     _json = ctx.actions.declare_file(_Fallback(ctx.outputs.json, ctx.label.name + "_emebed_data.json"))
@@ -162,8 +167,9 @@ def _cc_embed_data_impl(ctx):
             for s in GetPath(t, k).to_list()
         ]
 
-    ctx.actions.write(output=_json, content=json.encode([
-        Munge(s) for s in process
+    ctx.actions.write(output = _json, content = json.encode([
+        Munge(s)
+        for s in process
     ]))
 
     cc = ctx.actions.declare_file(_Fallback(ctx.outputs.cc, ctx.label.name + "_emebed_data.cc"))
@@ -177,14 +183,15 @@ def _cc_embed_data_impl(ctx):
     gen_src_args.add("--cc=%s" % cc.path)
     gen_src_args.add("--gendir=%s" % ctx.genfiles_dir.path)
     gen_src_args.add("--workspace=%s" % ctx.workspace_name)
-    if ctx.attr.namespace: gen_src_args.add("--namespace=%s" % ctx.attr.namespace)
+    if ctx.attr.namespace:
+        gen_src_args.add("--namespace=%s" % ctx.attr.namespace)
     gen_src_args.add("--symbol_prefix=%s" % prefix)
 
     ctx.actions.run(
-        inputs=[_json],
-        outputs=[cc, h],
-        executable=ctx.file._make_emebed_data,
-        arguments=[gen_src_args],
+        inputs = [_json],
+        outputs = [cc, h],
+        executable = ctx.file._make_emebed_data,
+        arguments = [gen_src_args],
     )
 
     ######################
@@ -192,16 +199,16 @@ def _cc_embed_data_impl(ctx):
 
     pack_args = ctx.actions.args()
     pack_args.add("-o%s" % bin_o.path)  # Output file name
-    pack_args.add("-r")                 # Make relocatable output (don't resolve stuff).
-    pack_args.add("--format=binary")    # Just read in the files.
+    pack_args.add("-r")  #              # Make relocatable output (don't resolve stuff).
+    pack_args.add("--format=binary")  # # Just read in the files.
 
     pack_args.add_all([f.path for f in process])
 
     ctx.actions.run(
-        inputs=depset(process),
-        outputs=[bin_o],
-        executable=cc_toolchain.ld_executable,
-        arguments=[pack_args],
+        inputs = depset(process),
+        outputs = [bin_o],
+        executable = cc_toolchain.ld_executable,
+        arguments = [pack_args],
     )
 
     ######################
@@ -226,7 +233,7 @@ def _cc_embed_data_impl(ctx):
         cc_toolchain = cc_toolchain,
         user_compile_flags = ctx.fragments.cpp.copts + ctx.fragments.cpp.cxxopts,
         source_file = cc.path,
-        include_directories = depset(transitive=[
+        include_directories = depset(transitive = [
             dep[CcInfo].compilation_context.quote_includes
             for dep in ctx.attr._cc_deps
         ]),
@@ -325,45 +332,46 @@ def _cc_embed_data_impl(ctx):
 
     ######################
     return [DefaultInfo(
-        runfiles=ctx.runfiles(files = ctx.files.srcs + ctx.files.deps + ctx.files._make_emebed_data),
+        runfiles = ctx.runfiles(files = ctx.files.srcs + ctx.files.deps + ctx.files._make_emebed_data),
     ), cc_common.merge_cc_infos(
         cc_infos = [lib_info] + [dep[CcInfo] for dep in ctx.attr._cc_deps],
     )]
 
 cc_embed_data = rule(
     doc = "Generate a library containing the contents of srcs.",
-
+    #
     implementation = _cc_embed_data_impl,
     attrs = {
         "namespace": attr.string(
-            doc="If given, the C++ namespace to generate in.",
+            doc = "If given, the C++ namespace to generate in.",
         ),
         "cc": attr.output(
-            doc="The generated C++ source file. (This must be set for other rules to depend on individual output files.)",
+            doc = "The generated C++ source file. (This must be set for other rules to depend on individual output files.)",
         ),
         "h": attr.output(
-            doc="The generated C++ header file. (This must be set for other rules to depend on individual output files.)",
+            doc = "The generated C++ header file. (This must be set for other rules to depend on individual output files.)",
         ),
         "a": attr.output(
-            doc="The generated cc_library archive. (This must be set for other rules to depend on individual output files.)",
+            doc = "The generated cc_library archive. (This must be set for other rules to depend on individual output files.)",
         ),
         "srcs": attr.label_list(
-            doc="The files to embed.",
-            allow_files=True,
+            doc = "The files to embed.",
+            allow_files = True,
         ),
         "deps": attr.label_keyed_string_dict(
-            doc="""A map from build rules to embed to a path (e.g. "files") on
+            doc = """A map from build rules to embed to a path (e.g. "files") on
             the Target object that yeilds a depset of files. (Figuring out what
             this path should be more or less requiers mucking around with rule
             implementations. Sorry.)""",
         ),
         "json": attr.output(),
         "_make_emebed_data": attr.label(
-            doc="The C++ file generater.",
-            allow_single_file=True,
-            default=":make_emebed_data",
+            doc = "The C++ file generater.",
+            allow_single_file = True,
+            default = ":make_emebed_data",
         ),
-        "_cc_toolchain": attr.label(  # used by find_cpp_toolchain()
+        # used by find_cpp_toolchain()
+        "_cc_toolchain": attr.label(
             default = Label("@bazel_tools//tools/cpp:current_cc_toolchain"),
         ),
         "_cc_deps": attr.label_list(

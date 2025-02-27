@@ -25,9 +25,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-exports_files(["cc_embed_data.bzl"])
-
 load("@com_github_bcsgh_build_test//build_test:build.bzl", "build_test")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+
+exports_files(["cc_embed_data.bzl"])
 
 test_suite(name = "ci")
 
@@ -39,7 +40,7 @@ cc_binary(
         "@abseil-cpp//absl/flags:flag",
         "@abseil-cpp//absl/flags:parse",
         "@abseil-cpp//absl/strings",
-        "@jsoncpp//:jsoncpp",
+        "@jsoncpp",
     ],
 )
 

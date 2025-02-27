@@ -25,10 +25,12 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-load("@bazel_skylib//lib:unittest.bzl", "asserts", "analysistest")
 load("@bazel_skylib//lib:sets.bzl", "sets")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
 load("@com_github_bcsgh_build_test//build_test:build.bzl", "build_test")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 load("//cc_embed_data:cc_embed_data.bzl", "cc_embed_data")
 
 ##### SUCCESS case
@@ -37,16 +39,18 @@ def _cc_embed_data_contents_test_impl(ctx):
     env = analysistest.begin(ctx)
 
     target_under_test = analysistest.target_under_test(env)
-    asserts.set_equals(env,
-      sets.make([
-          "cc_embed_data_example_emebed_data.cc",
-          "cc_embed_data_example_emebed_data.h",
-          "libcc_embed_data_example.a",
-      ]),
-      sets.make([
-          f.basename
-          for f in target_under_test[DefaultInfo].files.to_list()
-      ]))
+    asserts.set_equals(
+        env,
+        sets.make([
+            "cc_embed_data_example_emebed_data.cc",
+            "cc_embed_data_example_emebed_data.h",
+            "libcc_embed_data_example.a",
+        ]),
+        sets.make([
+            f.basename
+            for f in target_under_test[DefaultInfo].files.to_list()
+        ]),
+    )
     return analysistest.end(env)
 
 cc_embed_data_contents_test = analysistest.make(_cc_embed_data_contents_test_impl)
@@ -72,7 +76,7 @@ def cc_embed_data_suite(name):
         targets = [":cc_embed_data_example"],
     )
 
-    native.cc_test(
+    cc_test(
         name = "cc_embed_data_example_live_test",
         srcs = ["cc_embed_data_example_test.cc"],
         data = SRCS,
@@ -95,8 +99,8 @@ def cc_embed_data_suite(name):
 
     SHORT_SRC = [
         "cc_embed_data_test.bzl",  # local static
-        ":generated.txt",          # local generated
-        ":testdata/nested.txt",    # dir inside a package
+        ":generated.txt",  #       # local generated
+        ":testdata/nested.txt",  # # dir inside a package
 
         # extern static
         "@bazel_skylib//:LICENSE",
@@ -126,7 +130,7 @@ def cc_embed_data_suite(name):
         targets = [":cc_embed_data_short"],
     )
 
-    native.cc_test(
+    cc_test(
         name = "cc_embed_data_short_live_test",
         srcs = ["cc_embed_data_short_test.cc"],
         data = SHORT_SRC,
@@ -150,7 +154,7 @@ def cc_embed_data_suite(name):
         targets = [":cc_embed_data_deps"],
     )
 
-    native.cc_test(
+    cc_test(
         name = "cc_embed_data_deps_live_test",
         srcs = ["cc_embed_data_deps_test.cc"],
         deps = [
@@ -168,7 +172,7 @@ def cc_embed_data_suite(name):
         a = "cc_embed_data_names.a",
     )
 
-    native.cc_binary(
+    cc_binary(
         name = "names_main",
         srcs = ["names_main.cc"],
         deps = [":cc_embed_data_names"],
